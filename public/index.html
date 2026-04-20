@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>משחק התאמת מילים</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=DM+Serif+Display:ital@0;1&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <div class="noise"></div>
+    <main class="app-shell">
+      <section class="card" id="lobbyCard">
+        <h1>Same-Two-Words</h1>
+        <p class="subtitle">הזמינו חבר, צפו באותה תמונה, וכתבו אותו תיאור בן 2 מילים.</p>
+
+        <label>
+          השם שלך
+          <input id="nameInput" maxlength="24" placeholder="הקלד שם" />
+        </label>
+
+        <div class="actions">
+          <button id="createRoomBtn">צור משחק חדש</button>
+          <div class="join-box">
+            <input id="roomCodeInput" maxlength="6" placeholder="קוד חדר" />
+            <button id="joinRoomBtn" class="secondary">הצטרף</button>
+          </div>
+        </div>
+
+        <div id="shareArea" class="share-area hidden">
+          <p>שתף את הקישור הזה עם שחקן 2:</p>
+          <div class="share-row">
+            <input id="shareLink" readonly />
+            <button id="copyBtn" class="secondary">העתק</button>
+          </div>
+        </div>
+
+        <p id="statusText" class="status">ממתין...</p>
+      </section>
+
+      <section class="card hidden" id="gameCard">
+        <div class="top-row">
+          <div>
+            <h2 id="roomLabel">חדר</h2>
+            <p id="roundLabel" class="subtitle"></p>
+          </div>
+          <div class="top-actions">
+            <button id="replaceImageBtn" class="secondary hidden" type="button">החלף תמונה</button>
+            <div class="score-pill" id="scorePill">נקודות זוג: 0</div>
+          </div>
+        </div>
+
+        <div id="subjectArea" class="subject-area">
+          <label>
+            נושא
+            <input id="subjectInput" maxlength="60" placeholder="למשל: כלבים, חלל, מכוניות, ישראל" />
+          </label>
+          <button id="startBtn">התחל משחק</button>
+        </div>
+
+        <div id="imageWrap" class="image-wrap hidden">
+          <img id="gameImage" alt="תמונת סבב" />
+        </div>
+
+        <form id="guessForm" class="guess-form hidden">
+          <label>
+            תיאור (2 מילים)
+            <input id="descriptionInput" maxlength="48" placeholder="למשל: שמח פרוותי" required />
+          </label>
+          <button type="submit">שלח תיאור</button>
+        </form>
+
+        <div id="resultBox" class="result-box"></div>
+
+        <div class="players" id="playersList"></div>
+      </section>
+    </main>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/client.js"></script>
+  </body>
+</html>

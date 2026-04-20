@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>פאנל ניהול משחק</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=DM+Serif+Display:ital@0;1&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <div class="noise"></div>
+    <main class="app-shell">
+      <section class="card">
+        <h1>פאנל ניהול</h1>
+        <p class="subtitle">ניקוד חי והתקדמות הסבבים לכל זוג שחקנים.</p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>חדר</th>
+                <th>שחקנים</th>
+                <th>נושא</th>
+                <th>נקודות זוג</th>
+                <th>סבבים</th>
+                <th>עודכן</th>
+              </tr>
+            </thead>
+            <tbody id="scoreRows"></tbody>
+          </table>
+        </div>
+
+        <h2 style="margin-top: 18px">כל החדרים הפעילים</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>חדר</th>
+                <th>שחקנים</th>
+                <th>כמות</th>
+                <th>סטטוס</th>
+                <th>נושא</th>
+                <th>התקדמות</th>
+                <th>נקודות זוג</th>
+              </tr>
+            </thead>
+            <tbody id="roomRows"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <script src="/admin.js"></script>
+  </body>
+</html>
