@@ -55,6 +55,10 @@ h2 {
   letter-spacing: 0.4px;
 }
 
+.game-title {
+  margin-bottom: 10px;
+}
+
 .subtitle {
   margin-top: 6px;
   color: #3e4f56;

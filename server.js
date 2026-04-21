@@ -362,8 +362,7 @@ function emitRound(room) {
 
   const assignments = room.playerImageAssignments || {};
   room.players.forEach((player) => {
-    const imageIndex = Number.isInteger(assignments[player.id]) ? assignments[player.id] : 0;
-    const imageUrl = room.roundImageUrls?.[imageIndex] || room.roundImageUrls?.[0] || room.currentImageUrl;
+    const imageUrl = getPlayerRoundImage(room, player.id);
     io.to(player.id).emit("roundData", {
       imageUrl,
       round: room.roundIndex + 1,
@@ -371,6 +370,12 @@ function emitRound(room) {
       subject: room.subject
     });
   });
+}
+
+function getPlayerRoundImage(room, playerId) {
+  const assignments = room.playerImageAssignments || {};
+  const imageIndex = Number.isInteger(assignments[playerId]) ? assignments[playerId] : 0;
+  return room.roundImageUrls?.[imageIndex] || room.roundImageUrls?.[0] || room.currentImageUrl;
 }
 
 function finalizeRound(room, { requireAllSubmitted = true, reason = "manual" } = {}) {
@@ -402,8 +407,8 @@ function finalizeRound(room, { requireAllSubmitted = true, reason = "manual" } =
     if (!words) {
       continue;
     }
-    const imageIndex = room.playerImageAssignments?.[pid] ?? 0;
-    const key = `${imageIndex}::${normalizePair(words[0], words[1])}`;
+    const imageUrl = getPlayerRoundImage(room, pid);
+    const key = `${imageUrl}::${normalizePair(words[0], words[1])}`;
     if (!groups[key]) groups[key] = [];
     groups[key].push(pid);
   }
@@ -688,9 +693,8 @@ io.on("connection", (socket) => {
       socket.emit("joinedRoom", { roomId: normalizedId });
       emitRoomState(room);
       if (room.started && room.roundActive) {
-        const imageIndex = room.playerImageAssignments?.[socket.id] ?? 0;
         socket.emit("roundData", {
-          imageUrl: room.roundImageUrls?.[imageIndex] || room.roundImageUrls?.[0] || room.currentImageUrl,
+          imageUrl: getPlayerRoundImage(room, socket.id),
           round: room.roundIndex + 1,
           totalRounds: TOTAL_ROUNDS,
           subject: room.subject

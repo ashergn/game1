@@ -1,4 +1,4 @@
-# Same-Two-Words (2-Player Realtime Game)
+# תיבת נח 2026 (2-Player Realtime Game)
 
 A web-based game where:
 
@@ -51,7 +51,7 @@ Open `http://localhost:3000`.
 3. Render will detect `render.yaml` automatically.
 4. Deploy.
 5. Your app will get a public URL like:
-   `https://same-two-words.onrender.com`
+   `https://teivat-noah-2026.onrender.com`
 6. In Render service settings, add environment variables:
    - `ADMIN_USER`
    - `ADMIN_PASS`

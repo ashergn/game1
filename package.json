@@ -1,7 +1,7 @@
 {
   "name": "game1",
   "version": "1.0.0",
-  "description": "",
+  "description": "תיבת נח 2026",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
