@@ -17,7 +17,7 @@
     <main class="app-shell">
       <section class="card" id="lobbyCard">
         <h1>Same-Two-Words</h1>
-        <p class="subtitle">הזמינו חבר, צפו באותה תמונה, וכתבו אותו תיאור בן 2 מילים.</p>
+        <p class="subtitle">המנהל יוצר חדר, שחקנים מצטרפים עם קוד חדר, ומנסים לכתוב אותו תיאור בן 2 מילים.</p>
 
         <label>
           השם שלך
@@ -25,9 +25,15 @@
         </label>
 
         <div class="actions">
-          <button id="createRoomBtn">צור משחק חדש</button>
+          <div class="create-box">
+            <label>
+              סיסמת משחק (לחדר חדש)
+              <input id="createPassInput" type="password" maxlength="32" placeholder="בחר סיסמה לחדר" />
+            </label>
+            <button id="createRoomBtn">צור משחק חדש</button>
+          </div>
           <div class="join-box">
-            <input id="roomCodeInput" maxlength="6" placeholder="קוד חדר" />
+            <input id="roomCodeInput" maxlength="6" placeholder="קוד חדר" style="text-transform:uppercase" />
             <button id="joinRoomBtn" class="secondary">הצטרף</button>
           </div>
         </div>
@@ -50,7 +56,9 @@
             <p id="roundLabel" class="subtitle"></p>
           </div>
           <div class="top-actions">
-            <button id="replaceImageBtn" class="secondary hidden" type="button">החלף תמונה</button>
+            <button id="startRoundBtn" class="secondary hidden" type="button">התחל סבב</button>
+            <div id="roundCountdown" class="countdown-pill hidden">נותרו 00:00</div>
+            <button id="replaceImageBtn" class="secondary hidden" type="button">החלף סט תמונות</button>
             <div class="score-pill" id="scorePill">נקודות זוג: 0</div>
           </div>
         </div>
@@ -61,6 +69,34 @@
             <input id="subjectInput" maxlength="60" placeholder="למשל: כלבים, חלל, מכוניות, ישראל" />
           </label>
           <button id="startBtn">התחל משחק</button>
+        </div>
+
+        <div id="managerPreview" class="manager-preview hidden">
+          <label>
+            נושא נוכחי:
+            <input id="changeSubjectInput" maxlength="60" placeholder="הזן נושא חדש" />
+          </label>
+          <button id="changeSubjectBtn" class="secondary">החלף נושא</button>
+          <label>
+            זמן נעילת סבב (בשניות)
+            <input id="roundDurationInput" type="number" min="10" max="600" step="1" value="60" />
+          </label>
+          <p id="managerPreviewHint" class="manager-preview-hint"></p>
+          <div id="managerPreviewCounts" class="manager-preview-counts"></div>
+          <div class="manager-preview-grid">
+            <div class="manager-preview-card">
+              <span>תמונה א</span>
+              <img id="managerImageA" alt="תצוגה מקדימה לתמונה א" />
+            </div>
+            <div class="manager-preview-card">
+              <span>תמונה ב</span>
+              <img id="managerImageB" alt="תצוגה מקדימה לתמונה ב" />
+            </div>
+            <div class="manager-preview-card">
+              <span>תמונה ג</span>
+              <img id="managerImageC" alt="תצוגה מקדימה לתמונה ג" />
+            </div>
+          </div>
         </div>
 
         <div id="imageWrap" class="image-wrap hidden">
