@@ -20,6 +20,15 @@ function getCountdownLabel(roundActive, roundEndsAt) {
   return `${minutes}:${seconds}`;
 }
 
+function escapeHtml(text) {
+  return String(text || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/\"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 // ── Login ─────────────────────────────────────────────────────────────────────
 
 document.getElementById("loginForm").addEventListener("submit", async (e) => {
@@ -155,6 +164,11 @@ async function refreshRoom() {
       winnersBox.style.display = "none";
     }
 
+    const latest = room.latestRoundReport;
+    const latestByPlayer = new Map(
+      (latest?.byPlayer || []).map((entry) => [entry.playerId, entry])
+    );
+
     // Replace image button
     document.getElementById("replaceImageAdminBtn").style.display = room.started ? "" : "none";
 
@@ -162,11 +176,16 @@ async function refreshRoom() {
     const tbody = document.getElementById("playersBody");
     tbody.innerHTML = "";
     room.players.forEach((player, i) => {
+      const latestEntry = latestByPlayer.get(player.id);
+      const descriptionText = latestEntry?.description
+        ? `תמונה ${escapeHtml(latestEntry.imageLabel)}: ${escapeHtml(latestEntry.description)}`
+        : "-";
       const tr = document.createElement("tr");
       tr.innerHTML = `
         <td>${i + 1}</td>
         <td>${player.name}</td>
         <td>${player.score}</td>
+        <td>${descriptionText}</td>
         <td>
           <button
             class="kick-btn secondary"

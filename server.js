@@ -28,6 +28,7 @@ const MIN_ROUND_DURATION_SEC = 10;
 const MAX_ROUND_DURATION_SEC = 600;
 
 const roundTimers = new Map();
+const IMAGE_LABELS = ["א", "ב", "ג", "ד", "ה"];
 
 function createRoomId() {
   return Math.random().toString(36).slice(2, 8).toUpperCase();
@@ -378,6 +379,67 @@ function getPlayerRoundImage(room, playerId) {
   return room.roundImageUrls?.[imageIndex] || room.roundImageUrls?.[0] || room.currentImageUrl;
 }
 
+function buildRoundReport(room, participantIds) {
+  const activeImageCount = room.activeImageCount || 1;
+  const imageUrls = (room.roundImageUrls || []).slice(0, activeImageCount);
+  const byImage = imageUrls.map((imageUrl, index) => ({
+    imageUrl,
+    imageLabel: IMAGE_LABELS[index] || String(index + 1),
+    submissions: []
+  }));
+
+  const byPlayer = [];
+
+  for (const playerId of participantIds) {
+    const player = room.players.find((p) => p.id === playerId);
+    const imageUrl = getPlayerRoundImage(room, playerId);
+    const words = room.guesses[playerId];
+    const description = words ? `${words[0]} ${words[1]}` : "";
+
+    let imageGroup = byImage.find((item) => item.imageUrl === imageUrl);
+    if (!imageGroup) {
+      imageGroup = {
+        imageUrl,
+        imageLabel: IMAGE_LABELS[byImage.length] || String(byImage.length + 1),
+        submissions: []
+      };
+      byImage.push(imageGroup);
+    }
+
+    imageGroup.submissions.push({
+      playerId,
+      playerName: player ? player.name : playerId,
+      description
+    });
+
+    byPlayer.push({
+      playerId,
+      playerName: player ? player.name : playerId,
+      imageUrl,
+      imageLabel: imageGroup.imageLabel,
+      description
+    });
+  }
+
+  return {
+    roundNumber: room.roundIndex + 1,
+    byImage,
+    byPlayer
+  };
+}
+
+function emitRoundTitlesToPlayers(room, roundReport) {
+  for (const playerEntry of roundReport.byPlayer) {
+    const imageGroup = roundReport.byImage.find((item) => item.imageUrl === playerEntry.imageUrl);
+    const titles = (imageGroup?.submissions || []).filter((s) => s.description);
+    io.to(playerEntry.playerId).emit("roundTitles", {
+      roundNumber: roundReport.roundNumber,
+      imageLabel: playerEntry.imageLabel,
+      titles
+    });
+  }
+}
+
 function finalizeRound(room, { requireAllSubmitted = true, reason = "manual" } = {}) {
   if (room.players.length < 2 || !room.roundActive) {
     return;
@@ -399,6 +461,8 @@ function finalizeRound(room, { requireAllSubmitted = true, reason = "manual" } =
   if (requireAllSubmitted && submittedIds.length !== participants.length) {
     return;
   }
+
+  const roundReport = buildRoundReport(room, participants);
 
   // Group submitted guesses by image assignment and normalized description
   const groups = {};
@@ -440,6 +504,12 @@ function finalizeRound(room, { requireAllSubmitted = true, reason = "manual" } =
     emitRoomState(room);
     emitManagerPreview(room);
     io.to(room.id).emit("roundResult", { matched: true, winners: winnerNames });
+    emitRoundTitlesToPlayers(room, roundReport);
+    room.roundHistory = room.roundHistory || [];
+    room.roundHistory.push(roundReport);
+    if (room.roundHistory.length > TOTAL_ROUNDS) {
+      room.roundHistory.shift();
+    }
 
     if (room.roundIndex >= TOTAL_ROUNDS) {
       emitRound(room);
@@ -454,6 +524,12 @@ function finalizeRound(room, { requireAllSubmitted = true, reason = "manual" } =
   emitRoomState(room);
   emitManagerPreview(room);
   io.to(room.id).emit("roundResult", { matched: false });
+  emitRoundTitlesToPlayers(room, roundReport);
+  room.roundHistory = room.roundHistory || [];
+  room.roundHistory.push(roundReport);
+  if (room.roundHistory.length > TOTAL_ROUNDS) {
+    room.roundHistory.shift();
+  }
 
   if (reason === "timeout") {
     io.to(room.id).emit("info", { message: "הזמן לסבב הסתיים. לא ניתן להוסיף ניחושים נוספים." });
@@ -568,7 +644,8 @@ app.get("/api/admin/room/:roomId", requireAdmin, canAccessRoom, (req, res) => {
     totalRounds: TOTAL_ROUNDS,
     pairPoints: room.pairPoints,
     players,
-    roundWinners: room.roundWinners || {}
+    roundWinners: room.roundWinners || {},
+    latestRoundReport: room.roundHistory?.[room.roundHistory.length - 1] || null
   });
 });
 
@@ -667,7 +744,8 @@ io.on("connection", (socket) => {
       guesses: {},
       scores: {},
       pairPoints: 0,
-      roundWinners: {}
+      roundWinners: {},
+      roundHistory: []
     };
 
     rooms.set(roomId, room);
@@ -761,6 +839,7 @@ io.on("connection", (socket) => {
     room.started = true;
     room.pairPoints = 0;
     room.roundWinners = {};
+    room.roundHistory = [];
 
     room.players.forEach((p) => {
       room.scores[p.id] = 0;

@@ -25,6 +25,7 @@ const imageWrap = document.getElementById("imageWrap");
 const gameImage = document.getElementById("gameImage");
 const guessForm = document.getElementById("guessForm");
 const descriptionInput = document.getElementById("descriptionInput");
+const guessSubmitBtn = guessForm.querySelector('button[type="submit"]');
 const resultBox = document.getElementById("resultBox");
 const playersList = document.getElementById("playersList");
 const managerPreview = document.getElementById("managerPreview");
@@ -41,6 +42,16 @@ let currentRoomId = "";
 let meName = "";
 let currentRoomState = null;
 let countdownInterval = null;
+let guessSubmittedThisRound = false;
+
+function escapeHtml(text) {
+  return String(text || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/\"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
 
 function clearCountdownInterval() {
   if (countdownInterval) {
@@ -163,6 +174,10 @@ changeSubjectBtn.addEventListener("click", () => {
 
 guessForm.addEventListener("submit", (e) => {
   e.preventDefault();
+  if (guessSubmittedThisRound) {
+    return;
+  }
+
   const description = descriptionInput.value.trim().toLowerCase().replace(/\s+/g, " ");
   const words = description ? description.split(" ") : [];
   if (words.length !== 2) {
@@ -171,6 +186,10 @@ guessForm.addEventListener("submit", (e) => {
   }
 
   socket.emit("submitGuess", { roomId: currentRoomId, description });
+  guessSubmittedThisRound = true;
+  guessSubmitBtn.textContent = "נשלח";
+  guessSubmitBtn.disabled = true;
+  descriptionInput.disabled = true;
   resultBox.textContent = "נשמר. ממתין לשחקנים אחרים...";
 });
 
@@ -252,6 +271,10 @@ socket.on("roundData", ({ imageUrl, round, totalRounds, subject }) => {
   imageWrap.classList.remove("hidden");
   guessForm.classList.remove("hidden");
   subjectArea.classList.add("hidden");
+  guessSubmittedThisRound = false;
+  guessSubmitBtn.textContent = "שלח תיאור";
+  guessSubmitBtn.disabled = false;
+  descriptionInput.disabled = false;
 
   gameImage.src = imageUrl;
   roundLabel.textContent = `נושא: ${subject} | סבב ${round}/${totalRounds}`;
@@ -263,9 +286,15 @@ socket.on("roundData", ({ imageUrl, round, totalRounds, subject }) => {
 
 socket.on("guessSaved", () => {
   resultBox.textContent = "התיאור נשמר. ממתין לשחקנים אחרים...";
+  guessSubmittedThisRound = true;
+  guessSubmitBtn.textContent = "נשלח";
+  guessSubmitBtn.disabled = true;
+  descriptionInput.disabled = true;
 });
 
 socket.on("roundResult", ({ matched, winners }) => {
+  guessSubmitBtn.disabled = true;
+  descriptionInput.disabled = true;
   if (matched) {
     const names = (winners || []).join(", ");
     resultBox.innerHTML = `<strong>יש התאמה!</strong> המנצחים: ${names}`;
@@ -274,7 +303,25 @@ socket.on("roundResult", ({ matched, winners }) => {
   }
 });
 
+socket.on("roundTitles", ({ imageLabel, titles }) => {
+  const rows = Array.isArray(titles) ? titles : [];
+  const content = rows.length
+    ? rows
+      .map((item) => `${escapeHtml(item.playerName)}: ${escapeHtml(item.description)}`)
+      .join("<br>")
+    : "לא נשלחו תיאורים לתמונה הזו בסבב.";
+
+  resultBox.innerHTML += `
+    <div style="margin-top:10px;padding-top:10px;border-top:1px dashed #1f2a2e44">
+      <strong>הכותרות לתמונה שלך (תמונה ${escapeHtml(imageLabel)}):</strong><br>
+      ${content}
+    </div>
+  `;
+});
+
 socket.on("gameOver", ({ scores, pairPoints, totalRounds }) => {
+  guessSubmitBtn.disabled = true;
+  descriptionInput.disabled = true;
   guessForm.classList.add("hidden");
   const scoreLines = (scores || [])
     .map((s, i) => `${i + 1}. ${s.name}: ${s.points}`)
@@ -309,6 +356,8 @@ socket.on("showManagerImages", ({ imageUrls, activeImageCount, playerCount, dist
 
 socket.on("kicked", ({ message }) => {
   clearCountdownInterval();
+  guessSubmitBtn.disabled = true;
+  descriptionInput.disabled = true;
   guessForm.classList.add("hidden");
   imageWrap.classList.add("hidden");
   resultBox.innerHTML = `<strong style="color:#dc2626">${message}</strong>`;
